@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var multer = require('multer');
 var xlsxtojson = require('convert-excel-to-json');
 var jsonfile = require('jsonfile');
+jsonfile.spaces=2;
 
 app.use(bodyParser.json());  
 
@@ -39,6 +40,7 @@ var upload = multer({ //multer settings
 /** API path that will upload the files */
 app.post('/upload', function(req, res) {
 	var exceltojson;
+	let result =[]
 	upload(req,res,function(err){
 		if(err){
 			res.json({error_code:1,err_desc:err});
@@ -54,17 +56,29 @@ app.post('/upload', function(req, res) {
 		//
 		// XLSX to JSON >>>>>>>>>>>>>>>>
 		// 
-		var result = exceltojson({
+		var res1 = exceltojson({
 			sourceFile: req.file.path,
+			range: 'A2:A6',
+			// sheets:['Invoice']
 		});
+
+		result.push(res1);
+
+		var res2= exceltojson({
+			sourceFile: req.file.path,
+			range: 'C9:C14',
+			// sheets:['Invoice']
+		});
+		result.push(res2);
 		//console.log('conversion successful check output.json');
 		var file = 'output.json';
 		//
 		//use jsonfile module to store file onto db >>>
 		//
-		jsonfile.writeFile(file, result, function (err) {
+		jsonfile.writeFile(file, result, {spaces:2}, function (err) {
 			return err;//console.error(err)
 		});
+		
 		res.json({ data: result});
 	});
 							
